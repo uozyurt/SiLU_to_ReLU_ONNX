@@ -18,13 +18,20 @@ def strip_and_split_input(input_layer_name):
     split_output = stripped_output.split(",")
     return split_output
 
+# def check_if_output_is_sigmoid(output):
+#     stripped_output = strip_layer(output)
+#     if (stripped_output.endswith("Sigmoid_output_0")):
+#         return True
+#     else:
+#         return False
+    
+
 def check_if_output_is_sigmoid(output):
-    stripped_output = strip_layer(output)
-    if (stripped_output.endswith("Sigmoid_output_0")):
+    op_type = output.op_type
+    if op_type == "Sigmoid":
         return True
     else:
         return False
-    
 
 def find_outputs_output(current_node, model):
     ret = []
@@ -81,9 +88,10 @@ def replace_silu(model_input_path, model_output_path, new_activation_name, alpha
 
         # iterate the connected nodes to the current nodes output
         for ind, output in enumerate(output_output):
-            if (check_if_output_is_sigmoid(output.output)): # check if any sigmoid layer exists
+            if (check_if_output_is_sigmoid(output)): # check if any sigmoid layer exists
 
                 sigmoid_node = output
+                
 
                 if (ind == 0):
                     mul_node = output_output[1]
@@ -102,7 +110,7 @@ def replace_silu(model_input_path, model_output_path, new_activation_name, alpha
                         op_type= new_activation_name,
                         inputs=[sigmoid_node.input[0]],
                         outputs=[f"{new_activation_name}_{counter}"],
-                        alpha=0.1,
+                        alpha=alpha_for_LeakyRelu,
                         name=f"{new_activation_name}_{counter}")
                 else:
                     # create a new node (without declaring parameter, suitable for ReLU)
